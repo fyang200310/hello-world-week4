@@ -1,0 +1,78 @@
+// noprotect
+const COLS = 6;
+const ROWS = 6;
+const LOOP_FRAMES = 150;
+const DELAY = 0.06;
+
+let BG, ICINGS, SPRINKLE;
+
+function setup() {
+  createCanvas(720, 720);
+  BG = color(251, 236, 224);
+  ICINGS = [color(242, 150, 170),
+            color(151, 105, 164),
+            color(163, 165, 55)];
+  SPRINKLE = color(255, 250, 240);
+  strokeCap(ROUND);
+  noFill();
+}
+
+function draw() {
+  background(BG);
+
+  const cell = width / COLS;
+  const size = cell * 0.62;
+  const thick = cell * 0.2;
+
+  for (let i = 0; i < COLS; i++) {
+    for (let j = 0; j < ROWS; j++) {
+      const x = cell * (i + 0.5);
+      const y = cell * (j + 0.5);
+
+      let p = frameCount / LOOP_FRAMES - (i + j) * DELAY;
+      p = p - floor(p);
+
+      const icing = ICINGS[(i + j) % ICINGS.length];
+      drawDonut(x, y, size, thick, p, icing);
+    }
+  }
+}
+
+function drawDonut(x, y, size, thick, p, icing) {
+  push();
+  translate(x, y);
+  rotate(TWO_PI * p - HALF_PI);
+
+  let start, end;
+  if (p < 0.5) {
+    start = 0;
+    end = TWO_PI * ease(p * 2);
+  } else {
+    start = TWO_PI * ease((p - 0.5) * 2);
+    end = TWO_PI;
+  }
+
+  if (end - start > 0.02) {
+    stroke(icing);
+    strokeWeight(thick);
+    arc(0, 0, size, size, start, end);
+
+    stroke(SPRINKLE);
+    strokeWeight(thick * 0.12);
+    for (let k = 0; k < 12; k++) {
+      const a = (TWO_PI * k) / 12 + 0.2;
+      if (a > start && a < end) {
+        const r = size / 2 + (k % 2 === 0 ? -thick * 0.15 : thick * 0.15);
+        const tilt = a + (k % 3) * 0.6;
+        const len = thick * 0.18;
+        line(r * cos(a) - len * cos(tilt), r * sin(a) - len * sin(tilt),
+             r * cos(a) + len * cos(tilt), r * sin(a) + len * sin(tilt));
+      }
+    }
+  }
+  pop();
+}
+
+function ease(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - pow(-2 * t + 2, 3) / 2;
+}
